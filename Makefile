@@ -61,16 +61,16 @@ $(platform): generate
 	@echo
 	@echo build $@
 	@echo
-	@mkdir -p $(output)/$(modpkg)$(setsemver).$@
-	GOOS=$(call os,$@) GOARCH=$(call arch,$@) go build -v -ldflags="-s -w" -o $(output)/$(modpkg)$(setsemver).$@/$(modpkg) .
+	@mkdir -p $(output)/$(modpkg).$@
+	GOOS=$(call os,$@) GOARCH=$(call arch,$@) go build -v -ldflags="-s -w" -o $(output)/$(modpkg).$@/$(modpkg) .
 
 .SECONDEXPANSION:
 $(dist): $$(subst dist-,,$$@)
 	@echo
 	@echo dist $<
 	@echo
-	@cp $(assets) $(output)/$(modpkg)$(setsemver).$</
-	tar -czf $(output)/$(modpkg)$(setsemver).$<.tar.gz -C $(output) $(modpkg)$(setsemver).$<
+	@cp $(assets) $(output)/$(modpkg).$</
+	tar -czf $(output)/$(modpkg)$(setsemver).$<.tar.gz -C $(output) $(modpkg).$<
 
 $(clean):
 	@echo
@@ -83,5 +83,5 @@ $(distclean): $$(subst distclean-,clean-,$$@)
 	@echo
 	@echo distclean $(subst clean-,,$<)
 	@echo
-	rm -rf $(output)/$(modpkg)$(setsemver).$(subst clean-,,$<)
+	rm -rf $(output)/$(modpkg).$(subst clean-,,$<)
 	rm -f $(output)/$(modpkg)$(setsemver).$(subst clean-,,$<).tar.gz
