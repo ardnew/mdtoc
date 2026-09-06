@@ -6,7 +6,7 @@ modimp := $(shell go list -f '{{.ImportPath}}' .)
 
 modsemver = $(shell cat "$(moddir)/VERSION" 2>/dev/null)
 tagsemver = $(shell git describe --tags --abbrev=0 2>/dev/null)
-setsemver = $(or $(tagsemver),$(modsemver),$(VERSION))
+setsemver = $(strip $(or $(VERSION),$(modsemver),$(tagsemver)))
 
 output := dist
 assets := README.md LICENSE
@@ -21,7 +21,7 @@ distclean := $(foreach p,$(platform),distclean-$(p))
 os = $(firstword $(subst -, ,$(1)))
 arch = $(lastword $(subst -, ,$(1)))
 
-.PHONY: all generate version dist clean distclean bump-major bump-minor bump-patch $(platform) $(dist) $(clean) $(distclean)
+.PHONY: all generate version check-untracked release dist clean distclean bump-major bump-minor bump-patch $(platform) $(dist) $(clean) $(distclean)
 
 all: $(platform)
 
@@ -46,6 +46,16 @@ version: $(moddir)/VERSION
 	@echo "$(moddir) version $(shell cat $(moddir)/VERSION)"
 
 dist: $(dist)
+
+check-untracked:
+	@if git ls-files --others --exclude-standard --error-unmatch -- . >/dev/null 2>&1; then \
+		echo "untracked files must be removed before release:"; \
+		git ls-files --others --exclude-standard -- .; \
+		exit 1; \
+	fi
+
+release: check-untracked dist
+	gh release create v$(setsemver) --generate-notes $(output)/$(modpkg)$(setsemver).*.tar.gz
 
 clean: $(clean)
 
