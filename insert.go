@@ -36,7 +36,7 @@ func insertTOC(document []byte, mark string, toc []byte) ([]byte, error) {
 		trimmed := strings.TrimLeft(line, " ")
 		if strings.HasPrefix(trimmed, "```") || strings.HasPrefix(trimmed, "~~~") {
 			inFence = !inFence
-		} else if !inFence && line == marker {
+		} else if !inFence && !isIndentedCodeLine(line) && isMarkerLine(line, mark) {
 			matches = append(matches, markerLine{start: pos, end: end})
 		}
 		if next < 0 {
@@ -62,17 +62,30 @@ func insertTOC(document []byte, mark string, toc []byte) ([]byte, error) {
 		normalized = append(normalized, eol...)
 	}
 	var out bytes.Buffer
-	out.Write(document[:open.end])
-	if open.end == open.start+len(marker) {
-		out.WriteString(eol)
-	}
+	out.Write(document[:open.start])
+	out.WriteString(marker)
+	out.WriteString(eol)
 	out.Write(normalized)
 	if close != nil {
-		out.Write(document[close.start:])
+		out.WriteString(marker)
+		out.WriteString(eol)
+		out.Write(document[close.end:])
 	} else {
 		out.WriteString(marker)
 		out.WriteString(eol)
 		out.Write(document[open.end:])
 	}
 	return out.Bytes(), nil
+}
+
+func isMarkerLine(line, mark string) bool {
+	if !strings.HasPrefix(line, "<!--") || !strings.HasSuffix(line, "-->") {
+		return false
+	}
+	inner := strings.TrimSpace(line[len("<!--") : len(line)-len("-->")])
+	return inner == mark
+}
+
+func isIndentedCodeLine(line string) bool {
+	return strings.HasPrefix(line, "\t") || strings.HasPrefix(line, "    ")
 }

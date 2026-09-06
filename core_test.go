@@ -57,6 +57,39 @@ func TestInsertTOC(t *testing.T) {
 	}
 }
 
+func TestInsertTOCNormalizesIrregularMarkerSpacing(t *testing.T) {
+	for _, input := range []string{
+		"<!--mdtoc-->",
+		"<!--mdtoc -->",
+		"<!-- mdtoc-->",
+		"<!--     mdtoc-->",
+		"<!--mdtoc             -->",
+	} {
+		t.Run(input, func(t *testing.T) {
+			document := []byte("before\n" + input + "\nold\n" + input + "\nafter\n")
+			got, err := insertTOC(document, "mdtoc", []byte("- [One](#one)\n"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "before\n<!-- mdtoc -->\n- [One](#one)\n<!-- mdtoc -->\nafter\n"
+			if string(got) != want {
+				t.Errorf("insertTOC() = %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestInsertTOCNormalizesLoneMarker(t *testing.T) {
+	got, err := insertTOC([]byte("before\n<!--mdtoc-->\nafter\n"), "mdtoc", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "before\n<!-- mdtoc -->\n<!-- mdtoc -->\nafter\n"
+	if string(got) != want {
+		t.Errorf("insertTOC() = %q, want %q", got, want)
+	}
+}
+
 func TestRunCLI(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := runCLI(nil, testBuildInfo(), strings.NewReader("# Title\n"), &stdout, &stderr)
