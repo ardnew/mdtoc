@@ -115,6 +115,19 @@ func TestRunCLIHelpIncludesDescription(t *testing.T) {
 	}
 }
 
+func TestRunCLIUsage(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := runCLI([]string{"--usage"}, testBuildInfo(), strings.NewReader(""), &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("runCLI usage = (%d, %q)", code, stderr.String())
+	}
+	for _, text := range []string{"<!-- contents -->", "--insert guide.md --mark contents", "--write"} {
+		if !strings.Contains(stdout.String(), text) {
+			t.Errorf("usage output missing %q", text)
+		}
+	}
+}
+
 func TestRunCLIVersion(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	code := runCLI([]string{"--version"}, testBuildInfo(), strings.NewReader(""), &stdout, &stderr)

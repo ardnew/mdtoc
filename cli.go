@@ -15,6 +15,7 @@ import (
 
 type command struct {
 	Version kong.VersionFlag `help:"Show version and exit."`
+	Usage   bool             `help:"Show an example session and exit." short:"u"`
 	Prefix  string           `help:"Prefix for relative links." default:"." short:"p"`
 	Insert  string           `help:"Path to insertion target document." short:"I"`
 	Mark    string           `help:"Marker text in HTML comment." default:"${name}" short:"m"`
@@ -26,7 +27,8 @@ type command struct {
 
 type cliExit int
 
-const commandDescription = "Create a table of contents from Markdown headings"
+const commandDescription = `Create a table of contents from Markdown headings.
+  (see --help for flags, --usage for details)`
 
 func runCLI(args []string, info *debug.BuildInfo, stdin io.Reader, stdout, stderr io.Writer) (code int) {
 	defer func() {
@@ -85,6 +87,30 @@ func runCLI(args []string, info *debug.BuildInfo, stdin io.Reader, stdout, stder
 		}
 		fmt.Fprintln(stderr, err)
 		return 2
+	}
+	if cmd.Usage {
+		_, err := fmt.Fprint(stdout, `Put two matching HTML comments on separate lines in the document.
+
+    | cat > guide.md <<'EOF'
+    | # Yes this
+    | <!-- contents -->
+    | <!-- contents -->
+    | ## So important
+    | …
+    | EOF
+
+Specify the comment text with flag --mark (without "<!--" or "-->").
+
+    | mdtoc --insert guide.md --mark contents            # preview changes
+    | mdtoc --insert guide.md --mark contents --write    # commit to file
+
+Comments remain in the document so that the full table is replaced each run.
+`)
+		if err != nil {
+			fmt.Fprintln(stderr, err)
+			return 1
+		}
+		return 0
 	}
 	if cmd.Write && cmd.Insert == "" {
 		fmt.Fprintln(stderr, "--write requires --insert")

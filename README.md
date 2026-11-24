@@ -9,6 +9,7 @@ mdtoc [FLAGS] [PATH...]
 ```
 
 Run `mdtoc document.md` to write a table of contents to standard output.
+Run `mdtoc --usage` to see an example session.
 Run `mdtoc` with no paths to read standard input. Use `--` before a path that
 starts with `-`.
 
@@ -34,6 +35,7 @@ and an explicit `--mark` require `--insert`.
 
 | Flag | Short | Default | Description |
 |---|---|---|---|
+| `--usage` | | | Show an example session. |
 | `--prefix URI` | `-p URI` | `.` | Set a prefix for file links. |
 | `--insert PATH` | `-I PATH` | | Set the insertion document. |
 | `--mark TEXT` | `-m TEXT` | `mdtoc` | Set marker text. |
